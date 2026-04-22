@@ -125,6 +125,7 @@ python extract_vibrant_prots.py --phagedb chvd \
   extension), which is how the script locates `*.phages_combined.{fna,faa}` downstream.
 - The `--phagedb` delimiters are: `chvd → @`, `gov2 → length`, `imgvr → |`,
   `mgv → _`, `gpd → _VIRSorter`.
+- The sequence files associated with these specific databases must be pre-downloaded.
 
 ---
 ### 3. `HMM_search_phage_dbs.py`
@@ -215,29 +216,34 @@ python linearphage_search_ncbi.py \
     protein accessions.csv \
     you@example.com --api YOUR_NCBI_KEY
 
-# 2. Run VIBRANT on viral databases or ncbi sequences to prepare for HMM-screening and filter the proteins to include only proteins from sequences called as viruses by VIBRANT.
+# 2.1 Run VIBRANT on NCBI sequences to filter for phage contigs, and filter NCBI proteins to only those on phage contigs.
 python extract_vibrant_prots.py \
     --ncbi --prot_fasta all_prots_ncbi.faa \
-    -p /opt/VIBRANT -d /opt/VIBRANT/databases \
+    -p /path/to/VIBRANT -d /path/to/VIBRANT/databases \
     all_seqs_ncbi.fna
 
-or
+# 2.2 Run VIBRANT on viral sequence dbs to annotate and verify phage contigs, and filter annotated proteins to only those on phage contigs to prepare for HMM screening.
 
 python extract_vibrant_prots.py \
     --phagedb mgv \
-    -p /opt/VIBRANT -d /opt/VIBRANT/databases \
+    -p /path/to/VIBRANT -d /path/to/VIBRANT/databases \
     mgv_contigs.fna
 
-# 3. Screen the protein database generated from the phagedbs with one or more HMM profiles.
+# 3. Screen the protein database generated from the phage dbs with one or more HMM profiles.
 python HMM_search_phage_dbs.py \
     all_phage_prots_mgv.faa mgv_contigs.fna \
     profiles/TelN.hmm
 
+# Intermediate step: Concatenate all TelN phage contigs (NCBI and phage dbs) and phage proteins (NCBI and phage dbs) into 'all_TelN_phage_seqs.fna' and 'all_phage_prots.faa' files, respectively.
+
+# Intermediate step: De-replicate the 'all_TelN_phage_seqs.fna' file with CD-HIT to remove any exact duplicates or highly similar sequences.
 
 # 4. Final filter of the protein FASTAs against the CD-HIT dereplicated contigs.
 python fetch_final_prots.py \
     all_TelN_phage_seqs_derep99.fna \
     all_phage_prots.faa
+
+# Final step: Input final filtered phage proteins to vConTACT2 to generate taxonomic clusters.
 ```
 
 ## Author
